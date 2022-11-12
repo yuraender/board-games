@@ -3,4 +3,4 @@ project(EQP)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(EQP main.cpp)
+add_executable(EQP main.cpp main_old.cpp)
