@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include <map>
 #include <stdexcept>
 #include <windows.h>
@@ -9,18 +10,18 @@ const char FILES[N] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
 //Символ фигуры как ASCII
 enum FigureType : char {
 
-    KING = 'K',
-    QUEEN = 'Q',
-    ROOK = 'R',
-    BISHOP = 'B',
-    KNIGHT = 'N',
-    PAWN = 'P',
-    EMPTY = '\0'
+    King = 'K',
+    Queen = 'Q',
+    Rook = 'R',
+    Bishop = 'B',
+    Knight = 'N',
+    Pawn = 'P',
+    Empty = '\0'
 };
 
 enum Color {
 
-    WHITE, BLACK
+    White, Black
 };
 
 struct Position {
@@ -46,14 +47,29 @@ struct Figure {
     FigureType type;
     Color color;
 
-    bool Move(int row, int column, int newRow, int newColumn) {
+    bool Move(Position pos, Position nPos) {
         //TODO: написать алгоритм для проверки перемещения
-        return false;
+        switch (type) {
+            case King:
+                return std::abs(pos.file - nPos.file) <= 1 && std::abs(pos.rank - nPos.rank) <= 1;
+            case Queen:
+                return false;
+            case Rook:
+                return pos.file == nPos.file || pos.rank == nPos.rank;
+            case Bishop:
+                return std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank);
+            case Knight:
+                return false;
+            case Pawn:
+                return false;
+            default:
+                return false;
+        }
     }
 
     void Print() {
         char ch = type;
-        if (color == BLACK) {
+        if (color == Black) {
             ch = std::tolower(ch);
         }
         std::cout << ch;
@@ -66,34 +82,33 @@ struct Cell {
     Color color;
 
     void Print() {
-        if (figure.type != EMPTY) {
+        if (figure.type != Empty) {
             figure.Print();
         } else {
-            std::cout << (color == WHITE ? ' ' : '*');
+            std::cout << (color == White ? ' ' : '*');
         }
     }
 };
 
-struct Board {
+class Board {
     public:
     Board() {
         Initialize();
     }
 
-    Figure SetFigure(Position position, FigureType type, Color color) {
+    void SetFigure(Position position, FigureType type, Color color) {
         Figure figure{};
         figure.type = type;
         figure.color = color;
         cells[position].figure = figure;
 
-        if (type != EMPTY) {
+        if (type != Empty) {
             //TODO: проверить, можно ли ставить (не убивается ли)
         }
-        return figure;
     }
 
     void RemoveFigure(Position position) {
-        SetFigure(position, EMPTY, {});
+        SetFigure(position, Empty, {});
     }
 
     void Print() {
@@ -115,9 +130,9 @@ struct Board {
         for (const auto& file : FILES) {
             for (int rank = 1; rank <= N; rank++) {
                 Cell cell{};
-                cell.color = (rank + file - 'A') % 2 == 0 ? WHITE : BLACK;
+                cell.color = (rank + file - 'A') % 2 == 0 ? White : Black;
                 cells[Position{file, rank}] = cell;
-                SetFigure(Position{file, rank}, EMPTY, {});
+                RemoveFigure(Position{file, rank});
             }
         }
     }
@@ -136,9 +151,9 @@ int main() {
     SetConsoleOutputCP(65001);
 
     Board board = Board{};
-    board.SetFigure(Position{'E', 4}, QUEEN, WHITE);
-    board.SetFigure(Position{'F', 6}, BISHOP, BLACK);
-    board.SetFigure(Position{'A', 8}, KNIGHT, WHITE);
+    board.SetFigure(Position{'E', 4}, Queen, White);
+    board.SetFigure(Position{'F', 6}, Bishop, Black);
+    board.SetFigure(Position{'A', 8}, Knight, White);
 
     board.Print();
     return 0;
