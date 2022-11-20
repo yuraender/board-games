@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <cmath>
 #include <map>
 #include <stdexcept>
@@ -32,7 +33,7 @@ struct Position {
     Position(char file, int rank):
             file(file),
             rank(rank) {
-        if (file < 'A' || file > 'H' || rank < 1 || rank > 8) {
+        if (!std::count(std::begin(FILES), std::end(FILES), file) || rank < 1 || rank > N) {
             throw std::runtime_error("Incorrect position");
         }
     }
@@ -46,26 +47,6 @@ struct Figure {
 
     FigureType type;
     Color color;
-
-    bool Move(Position pos, Position nPos) {
-        //TODO: написать алгоритм для проверки перемещения
-        switch (type) {
-            case King:
-                return std::abs(pos.file - nPos.file) <= 1 && std::abs(pos.rank - nPos.rank) <= 1;
-            case Queen:
-                return false;
-            case Rook:
-                return pos.file == nPos.file || pos.rank == nPos.rank;
-            case Bishop:
-                return std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank);
-            case Knight:
-                return false;
-            case Pawn:
-                return false;
-            default:
-                return false;
-        }
-    }
 
     void Print() {
         char ch = type;
@@ -96,14 +77,36 @@ class Board {
         Initialize();
     }
 
+    Figure GetFigure(Position position) {
+        return cells[position].figure;
+    }
+
     void SetFigure(Position position, FigureType type, Color color) {
         Figure figure{};
         figure.type = type;
         figure.color = color;
         cells[position].figure = figure;
+    }
 
-        if (type != Empty) {
-            //TODO: проверить, можно ли ставить (не убивается ли)
+    bool MoveFigure(Position pos, Position nPos) {
+        Figure figure = GetFigure(pos);
+        switch (figure.type) {
+            case King:
+                return std::abs(pos.file - nPos.file) <= 1 && std::abs(pos.rank - nPos.rank) <= 1;
+            case Queen:
+                return pos.file == nPos.file || pos.rank == nPos.rank
+                       || std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank);
+            case Rook:
+                return pos.file == nPos.file || pos.rank == nPos.rank;
+            case Bishop:
+                return std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank);
+            case Knight:
+                return std::abs((pos.file - nPos.file) * (pos.rank - nPos.rank)) == 2;
+            case Pawn:
+                //TODO: Ест и ходит она по-разному, да и еще от цвета зависит
+                return false;
+            default:
+                return false;
         }
     }
 
@@ -130,7 +133,7 @@ class Board {
         for (const auto& file : FILES) {
             for (int rank = 1; rank <= N; rank++) {
                 Cell cell{};
-                cell.color = (rank + file - 'A') % 2 == 0 ? White : Black;
+                cell.color = (rank + file - FILES[0]) % 2 == 0 ? White : Black;
                 cells[Position{file, rank}] = cell;
                 RemoveFigure(Position{file, rank});
             }
@@ -154,6 +157,7 @@ int main() {
     board.SetFigure(Position{'E', 4}, Queen, White);
     board.SetFigure(Position{'F', 6}, Bishop, Black);
     board.SetFigure(Position{'A', 8}, Knight, White);
+    std::cout << board.MoveFigure(Position{'E', 4}, Position{'B', 7});
 
     board.Print();
     return 0;
