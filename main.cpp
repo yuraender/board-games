@@ -6,9 +6,8 @@
 #include <windows.h>
 
 const int N = 8;
-const char FILES[N] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+char FILES[N];
 
-//Символ фигуры как ASCII
 enum FigureType : char {
 
     King = 'K',
@@ -26,7 +25,6 @@ enum Color {
 };
 
 struct Position {
-
     char file;
     int rank;
 
@@ -44,11 +42,10 @@ struct Position {
 };
 
 struct Figure {
-
     FigureType type;
     Color color;
 
-    void Print() {
+    void Print() const {
         char ch = type;
         if (color == Black) {
             ch = std::tolower(ch);
@@ -58,11 +55,10 @@ struct Figure {
 };
 
 struct Cell {
-
     Figure figure;
     Color color;
 
-    void Print() {
+    void Print() const {
         if (figure.type != Empty) {
             figure.Print();
         } else {
@@ -88,14 +84,15 @@ class Board {
         cells[position].figure = figure;
     }
 
+    //Проверяет только движение
     bool MoveFigure(Position pos, Position nPos) {
         Figure figure = GetFigure(pos);
         switch (figure.type) {
             case King:
                 return std::abs(pos.file - nPos.file) <= 1 && std::abs(pos.rank - nPos.rank) <= 1;
             case Queen:
-                return pos.file == nPos.file || pos.rank == nPos.rank
-                       || std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank);
+                return !(pos.file == nPos.file || pos.rank == nPos.rank
+                         || std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank));
             case Rook:
                 return pos.file == nPos.file || pos.rank == nPos.rank;
             case Bishop:
@@ -106,7 +103,7 @@ class Board {
                 //TODO: Ест и ходит она по-разному, да и еще от цвета зависит
                 return false;
             default:
-                return false;
+                return true;
         }
     }
 
@@ -115,7 +112,7 @@ class Board {
     }
 
     void Print() {
-        for (int rank = N; rank > 0; rank--) {
+        for (int rank = N; rank >= 1; rank--) {
             std::cout << rank << ' ';
             for (const auto& file : FILES) {
                 cells[Position{file, rank}].Print();
@@ -123,7 +120,10 @@ class Board {
             }
             std::cout << '\n';
         }
-        std::cout << "  A B C D E F G H";
+        std::cout << "  ";
+        for (const auto& file : FILES) {
+            std::cout << file << ' ';
+        }
     }
 
     private:
@@ -140,25 +140,91 @@ class Board {
         }
     }
 
-    void Reset() {
+//    void Reset() {
+//        for (const auto& file : FILES) {
+//            for (int rank = 1; rank <= N; rank++) {
+//                RemoveFigure(Position{file, rank});
+//            }
+//        }
+//    }
+};
+
+std::map<int, std::vector<char>> used;
+int amount = 0;
+
+bool Check(Board& board, Position nPos) {
+    for (int rank = 1; rank < N; rank++) {
         for (const auto& file : FILES) {
-            for (int rank = 1; rank <= N; rank++) {
-                RemoveFigure(Position{file, rank});
+            Position pos = Position{file, rank};
+            if (!board.MoveFigure(pos, nPos)) {
+                return false;
             }
         }
     }
-};
+    return true;
+}
+
+std::vector<char> GetFreeFiles(Board& board, int rank) {
+    std::vector<char> files;
+    for (const auto& file : FILES) {
+        if (std::count(used[rank].begin(), used[rank].end(), file)) {
+            continue;
+        }
+        if (Check(board, Position{file, rank})) {
+            files.push_back(file);
+        }
+    }
+    return files;
+}
+
+void EQP(Board& board) {
+    for (int rank = 1; rank <= N;) {
+        std::vector<char> freeFiles = GetFreeFiles(board, rank);
+        if (freeFiles.empty()) {
+            if (rank == 1) {
+                break;
+            }
+            char previous = used[rank - 1].back();
+            for (int i = rank; i < N; i++) {
+                used[i] = {};
+            }
+            board.RemoveFigure(Position{previous, rank - 1});
+            rank--;
+            continue;
+        }
+        for (const auto& file : freeFiles) {
+            used[rank].push_back(file);
+            board.SetFigure(Position{file, rank}, Queen, {});
+            rank++;
+            break;
+        }
+        if (rank > N) {
+            std::cout << "Комбинация #" << ++amount << '\n';
+            board.Print();
+            std::cout << "\n\n";
+            for (int i = N; i > 1; i--) {
+                board.RemoveFigure(Position{used[i].back(), i});
+                if (!GetFreeFiles(board, i).empty()) {
+                    rank = i;
+                    break;
+                }
+                used[i] = {};
+            }
+        }
+    }
+}
 
 int main() {
+    //Set encoding to UTF-8 on Windows
     SetConsoleCP(65001);
     SetConsoleOutputCP(65001);
 
-    Board board = Board{};
-    board.SetFigure(Position{'E', 4}, Queen, White);
-    board.SetFigure(Position{'F', 6}, Bishop, Black);
-    board.SetFigure(Position{'A', 8}, Knight, White);
-    std::cout << board.MoveFigure(Position{'E', 4}, Position{'B', 7});
+    for (int i = 0; i < N; i++) {
+        FILES[i] = (char) ('A' + i);
+    }
 
-    board.Print();
+    Board board = Board{};
+    EQP(board);
+//    board.Print();
     return 0;
 }
