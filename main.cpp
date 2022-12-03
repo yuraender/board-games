@@ -1,15 +1,24 @@
 #include <iostream>
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <map>
 #include <stdexcept>
+#include <vector>
 #include <windows.h>
 
-const int N = 8;
-char FILES[N];
+using namespace std::chrono;
+
+const int N = 7;
+const std::vector<char> FILES = [] {
+    std::vector<char> files{};
+    for (char i = 'A'; i < 'A' + N; i++) {
+        files.push_back(i);
+    }
+    return files;
+}();
 
 enum FigureType : char {
-
     King = 'K',
     Queen = 'Q',
     Rook = 'R',
@@ -20,7 +29,6 @@ enum FigureType : char {
 };
 
 enum Color {
-
     White, Black
 };
 
@@ -48,7 +56,7 @@ struct Figure {
     void Print() const {
         char ch = type;
         if (color == Black) {
-            ch = std::tolower(ch);
+            ch = (char) std::tolower(ch);
         }
         std::cout << ch;
     }
@@ -73,11 +81,11 @@ class Board {
         Initialize();
     }
 
-    Figure GetFigure(Position position) {
+    Figure GetFigure(const Position& position) {
         return cells[position].figure;
     }
 
-    void SetFigure(Position position, FigureType type, Color color) {
+    void SetFigure(const Position& position, FigureType type, Color color) {
         Figure figure{};
         figure.type = type;
         figure.color = color;
@@ -85,7 +93,7 @@ class Board {
     }
 
     //Проверяет только движение
-    bool MoveFigure(Position pos, Position nPos) {
+    bool MoveFigure(const Position& pos, const Position& nPos) {
         Figure figure = GetFigure(pos);
         switch (figure.type) {
             case King:
@@ -107,7 +115,7 @@ class Board {
         }
     }
 
-    void RemoveFigure(Position position) {
+    void RemoveFigure(const Position& position) {
         SetFigure(position, Empty, {});
     }
 
@@ -151,9 +159,10 @@ class Board {
 
 std::map<int, std::vector<char>> used;
 int amount = 0;
+int iterations = 0;
 
-bool Check(Board& board, Position nPos) {
-    for (int rank = 1; rank < N; rank++) {
+bool Check(Board& board, const Position& nPos) {
+    for (int rank = 1; rank < nPos.rank; rank++) {
         for (const auto& file : FILES) {
             Position pos = Position{file, rank};
             if (!board.MoveFigure(pos, nPos)) {
@@ -214,17 +223,38 @@ void EQP(Board& board) {
     }
 }
 
+bool EQPNew(Board& board, const int& rank = 1) {
+    if (rank > N) {
+        std::cout << "Комбинация #" << ++amount << '\n';
+        board.Print();
+        std::cout << "\n\n";
+        return false;
+    }
+    for (const auto& file : FILES) {
+        iterations++;
+        Position position = Position{file, rank};
+        if (Check(board, position)) {
+            board.SetFigure(position, Queen, {});
+            if (!EQPNew(board, rank + 1)) {
+                board.RemoveFigure(position);
+            }
+        }
+    }
+    return false;
+}
+
 int main() {
     //Set encoding to UTF-8 on Windows
     SetConsoleCP(65001);
     SetConsoleOutputCP(65001);
 
-    for (int i = 0; i < N; i++) {
-        FILES[i] = (char) ('A' + i);
-    }
-
+    const auto time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     Board board = Board{};
-    EQP(board);
-//    board.Print();
+//    EQP(board);
+    EQPNew(board);
+    std::cout << "Iterations: " << iterations << '\n';
+    std::cout << "Time: "
+              << duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - time
+              << "ms";
     return 0;
 }
