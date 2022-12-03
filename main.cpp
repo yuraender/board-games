@@ -1,3 +1,5 @@
+#pragma ide diagnostic ignored "misc-no-recursion"
+
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -5,11 +7,10 @@
 #include <map>
 #include <stdexcept>
 #include <vector>
-#include <windows.h>
 
 using namespace std::chrono;
 
-const int N = 7;
+const int N = 8;
 const std::vector<char> FILES = [] {
     std::vector<char> files{};
     for (char i = 'A'; i < 'A' + N; i++) {
@@ -52,6 +53,7 @@ struct Position {
 struct Figure {
     FigureType type;
     Color color;
+    bool override;
 
     void Print() const {
         char ch = type;
@@ -81,26 +83,25 @@ class Board {
         Initialize();
     }
 
-    Figure GetFigure(const Position& position) {
+    Figure& GetFigure(const Position& position) {
         return cells[position].figure;
     }
 
-    void SetFigure(const Position& position, FigureType type, Color color) {
-        Figure figure{};
+    void SetFigure(const Position& position, FigureType type, Color color, bool override) {
+        Figure& figure = cells[position].figure;
         figure.type = type;
         figure.color = color;
-        cells[position].figure = figure;
+        figure.override = override;
     }
 
-    //Проверяет только движение
-    bool MoveFigure(const Position& pos, const Position& nPos) {
+    bool CanAttack(const Position& pos, const Position& nPos) {
         Figure figure = GetFigure(pos);
         switch (figure.type) {
             case King:
                 return std::abs(pos.file - nPos.file) <= 1 && std::abs(pos.rank - nPos.rank) <= 1;
             case Queen:
-                return !(pos.file == nPos.file || pos.rank == nPos.rank
-                         || std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank));
+                return pos.file == nPos.file || pos.rank == nPos.rank
+                       || std::abs(pos.file - nPos.file) == std::abs(pos.rank - nPos.rank);
             case Rook:
                 return pos.file == nPos.file || pos.rank == nPos.rank;
             case Bishop:
@@ -108,15 +109,15 @@ class Board {
             case Knight:
                 return std::abs((pos.file - nPos.file) * (pos.rank - nPos.rank)) == 2;
             case Pawn:
-                //TODO: Ест и ходит она по-разному, да и еще от цвета зависит
-                return false;
+                return pos.rank + (figure.color == White ? 1 : -1) == nPos.rank
+                       && (pos.file - 1 == nPos.file || pos.file + 1 == nPos.file);
             default:
-                return true;
+                return false;
         }
     }
 
     void RemoveFigure(const Position& position) {
-        SetFigure(position, Empty, {});
+        SetFigure(position, Empty, {}, true);
     }
 
     void Print() {
@@ -132,6 +133,10 @@ class Board {
         for (const auto& file : FILES) {
             std::cout << file << ' ';
         }
+    }
+
+    std::map<Position, Cell>& GetCells() {
+        return cells;
     }
 
     private:
@@ -157,75 +162,22 @@ class Board {
 //    }
 };
 
-std::map<int, std::vector<char>> used;
 int amount = 0;
 int iterations = 0;
 
 bool Check(Board& board, const Position& nPos) {
-    for (int rank = 1; rank < nPos.rank; rank++) {
-        for (const auto& file : FILES) {
-            Position pos = Position{file, rank};
-            if (!board.MoveFigure(pos, nPos)) {
-                return false;
-            }
+    for (const auto& item : board.GetCells()) {
+        if (item.second.figure.type != Empty
+            && board.CanAttack(item.first, nPos)) {
+            return false;
         }
     }
     return true;
 }
 
-std::vector<char> GetFreeFiles(Board& board, int rank) {
-    std::vector<char> files;
-    for (const auto& file : FILES) {
-        if (std::count(used[rank].begin(), used[rank].end(), file)) {
-            continue;
-        }
-        if (Check(board, Position{file, rank})) {
-            files.push_back(file);
-        }
-    }
-    return files;
-}
-
-void EQP(Board& board) {
-    for (int rank = 1; rank <= N;) {
-        std::vector<char> freeFiles = GetFreeFiles(board, rank);
-        if (freeFiles.empty()) {
-            if (rank == 1) {
-                break;
-            }
-            char previous = used[rank - 1].back();
-            for (int i = rank; i < N; i++) {
-                used[i] = {};
-            }
-            board.RemoveFigure(Position{previous, rank - 1});
-            rank--;
-            continue;
-        }
-        for (const auto& file : freeFiles) {
-            used[rank].push_back(file);
-            board.SetFigure(Position{file, rank}, Queen, {});
-            rank++;
-            break;
-        }
-        if (rank > N) {
-            std::cout << "Комбинация #" << ++amount << '\n';
-            board.Print();
-            std::cout << "\n\n";
-            for (int i = N; i > 1; i--) {
-                board.RemoveFigure(Position{used[i].back(), i});
-                if (!GetFreeFiles(board, i).empty()) {
-                    rank = i;
-                    break;
-                }
-                used[i] = {};
-            }
-        }
-    }
-}
-
-bool EQPNew(Board& board, const int& rank = 1) {
+bool EQP(Board& board, const int& rank = 1) {
     if (rank > N) {
-        std::cout << "Комбинация #" << ++amount << '\n';
+        std::cout << "Combination #" << ++amount << '\n';
         board.Print();
         std::cout << "\n\n";
         return false;
@@ -233,10 +185,12 @@ bool EQPNew(Board& board, const int& rank = 1) {
     for (const auto& file : FILES) {
         iterations++;
         Position position = Position{file, rank};
-        if (Check(board, position)) {
-            board.SetFigure(position, Queen, {});
-            if (!EQPNew(board, rank + 1)) {
+        if (board.GetFigure(position).override && Check(board, position)) {
+            board.SetFigure(position, Queen, {}, true);
+            if (!EQP(board, rank + 1)) {
                 board.RemoveFigure(position);
+            } else {
+                return true;
             }
         }
     }
@@ -244,14 +198,9 @@ bool EQPNew(Board& board, const int& rank = 1) {
 }
 
 int main() {
-    //Set encoding to UTF-8 on Windows
-    SetConsoleCP(65001);
-    SetConsoleOutputCP(65001);
-
     const auto time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     Board board = Board{};
-//    EQP(board);
-    EQPNew(board);
+    EQP(board);
     std::cout << "Iterations: " << iterations << '\n';
     std::cout << "Time: "
               << duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - time
