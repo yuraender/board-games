@@ -1,14 +1,14 @@
-#pragma ide diagnostic ignored "misc-no-recursion"
+#pragma once
+
+#ifndef EQP_BOARD_H
+#define EQP_BOARD_H
 
 #include <iostream>
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <map>
-#include <stdexcept>
 #include <vector>
-
-using namespace std::chrono;
+#include <stdexcept>
 
 const int N = 8;
 const std::vector<char> FILES = [] {
@@ -87,7 +87,7 @@ class Board {
         return cells[position].figure;
     }
 
-    void SetFigure(const Position& position, FigureType type, Color color, bool override) {
+    void SetFigure(const Position& position, FigureType type, Color color, bool override = true) {
         Figure& figure = cells[position].figure;
         figure.type = type;
         figure.color = color;
@@ -117,7 +117,7 @@ class Board {
     }
 
     void RemoveFigure(const Position& position) {
-        SetFigure(position, Empty, {}, true);
+        SetFigure(position, Empty, {});
     }
 
     void Print() {
@@ -152,58 +152,6 @@ class Board {
             }
         }
     }
-
-//    void Reset() {
-//        for (const auto& file : FILES) {
-//            for (int rank = 1; rank <= N; rank++) {
-//                RemoveFigure(Position{file, rank});
-//            }
-//        }
-//    }
 };
 
-int amount = 0;
-int iterations = 0;
-
-bool Check(Board& board, const Position& nPos) {
-    for (const auto& item : board.GetCells()) {
-        if (item.second.figure.type != Empty
-            && board.CanAttack(item.first, nPos)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool EQP(Board& board, const int& rank = 1) {
-    if (rank > N) {
-        std::cout << "Combination #" << ++amount << '\n';
-        board.Print();
-        std::cout << "\n\n";
-        return false;
-    }
-    for (const auto& file : FILES) {
-        iterations++;
-        Position position = Position{file, rank};
-        if (board.GetFigure(position).override && Check(board, position)) {
-            board.SetFigure(position, Queen, {}, true);
-            if (!EQP(board, rank + 1)) {
-                board.RemoveFigure(position);
-            } else {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-int main() {
-    const auto time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    Board board = Board{};
-    EQP(board);
-    std::cout << "Iterations: " << iterations << '\n';
-    std::cout << "Time: "
-              << duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - time
-              << "ms";
-    return 0;
-}
+#endif //EQP_BOARD_H
