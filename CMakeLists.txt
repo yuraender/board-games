@@ -3,7 +3,7 @@ project(EQP)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(EQP src/main.cpp include/eqp.h)
+add_executable(EQP src/main.cpp)
 include_directories(include)
 add_subdirectory(test)
 
