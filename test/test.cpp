@@ -4,7 +4,11 @@
 
 TEST(EQP, ComboAmount) {
     Board board{};
-    EQP(board);
+
+    int amount = 0;
+    int iterations = 0;
+    EQP(board, 1, amount, iterations);
+
     switch (N) {
         case 1:
             ASSERT_EQ(amount, 1);
@@ -39,27 +43,27 @@ TEST(EQP, ComboAmount) {
 
 TEST(Board, QueenAttack) {
     Board board{};
-    board.SetFigure(Position{'F', 5}, Queen, White);
-    ASSERT_FALSE(board.CanAttack(Position{'F', 5}, Position{'B', 6}));
-    ASSERT_FALSE(board.CanAttack(Position{'F', 5}, Position{'H', 1}));
-    ASSERT_TRUE(board.CanAttack(Position{'F', 5}, Position{'C', 8}));
-    ASSERT_TRUE(board.CanAttack(Position{'F', 5}, Position{'A', 5}));
+    Figure& figure = board.SetFigure(Position{'F', 5}, Queen, White);
+    ASSERT_FALSE(figure.CanAttack(Position{'F', 5}, Position{'B', 6}));
+    ASSERT_FALSE(figure.CanAttack(Position{'F', 5}, Position{'H', 1}));
+    ASSERT_TRUE(figure.CanAttack(Position{'F', 5}, Position{'C', 8}));
+    ASSERT_TRUE(figure.CanAttack(Position{'F', 5}, Position{'A', 5}));
 }
 
 TEST(Board, BishopAttack) {
     Board board{};
-    board.SetFigure(Position{'B', 5}, Bishop, White);
-    ASSERT_FALSE(board.CanAttack(Position{'B', 5}, Position{'C', 3}));
-    ASSERT_TRUE(board.CanAttack(Position{'B', 5}, Position{'E', 8}));
-    ASSERT_FALSE(board.CanAttack(Position{'B', 5}, Position{'F', 2}));
-    ASSERT_TRUE(board.CanAttack(Position{'B', 5}, Position{'A', 4}));
+    Figure& figure = board.SetFigure(Position{'B', 5}, Bishop, White);
+    ASSERT_FALSE(figure.CanAttack(Position{'B', 5}, Position{'C', 3}));
+    ASSERT_TRUE(figure.CanAttack(Position{'B', 5}, Position{'E', 8}));
+    ASSERT_FALSE(figure.CanAttack(Position{'B', 5}, Position{'F', 2}));
+    ASSERT_TRUE(figure.CanAttack(Position{'B', 5}, Position{'A', 4}));
 }
 
 TEST(Board, PawnAttack) {
     Board board{};
-    board.SetFigure(Position{'E', 4}, Pawn, Black);
-    ASSERT_FALSE(board.CanAttack(Position{'E', 4}, Position{'D', 5}));
-    ASSERT_FALSE(board.CanAttack(Position{'E', 4}, Position{'E', 5}));
-    ASSERT_FALSE(board.CanAttack(Position{'E', 4}, Position{'F', 5}));
-    ASSERT_TRUE(board.CanAttack(Position{'E', 4}, Position{'D', 3}));
+    Figure& figure = board.SetFigure(Position{'E', 4}, Pawn, Black);
+    ASSERT_FALSE(figure.CanAttack(Position{'E', 4}, Position{'D', 5}));
+    ASSERT_FALSE(figure.CanAttack(Position{'E', 4}, Position{'E', 5}));
+    ASSERT_FALSE(figure.CanAttack(Position{'E', 4}, Position{'F', 5}));
+    ASSERT_TRUE(figure.CanAttack(Position{'E', 4}, Position{'D', 3}));
 }
