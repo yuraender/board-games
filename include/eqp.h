@@ -1,8 +1,8 @@
 #pragma once
 #pragma ide diagnostic ignored "misc-no-recursion"
 
-#ifndef EQP_EQP_H
-#define EQP_EQP_H
+#ifndef BG_EQP_H
+#define BG_EQP_H
 
 #include <iostream>
 #include "board.h"
@@ -48,4 +48,4 @@ bool EQP(Board& board, const int& rank = 1) {
     return false;
 }
 
-#endif //EQP_EQP_H
+#endif //BG_EQP_H

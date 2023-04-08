@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef EQP_BOARD_H
-#define EQP_BOARD_H
+#ifndef BG_BOARD_H
+#define BG_BOARD_H
 
 #include <iostream>
 #include <algorithm>
@@ -174,4 +172,4 @@ class Board {
     }
 };
 
-#endif //EQP_BOARD_H
+#endif //BG_BOARD_H

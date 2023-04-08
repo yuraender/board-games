@@ -1,4 +1,10 @@
-# eqp
-Eight queen puzzle
+# Board Games
 
-The current code is designed to solve Eight Queens Problem, but it is very easy to change it to solve a N Queen Problem.
+## Chess
+
+At the moment, only the chessboard has been implemented.
+The current code is designed to solve N Queens Problem.
+
+## Other games
+
+Yet to be implemented.
