@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.23)
 project(BGTest)
 
 add_executable(BGTest test.cpp)
+include_directories(../src)
 
 enable_testing()
 
