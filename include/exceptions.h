@@ -1,5 +1,4 @@
-#ifndef BG_EXCEPTIONS_H
-#define BG_EXCEPTIONS_H
+#pragma once
 
 #include <exception>
 
@@ -16,5 +15,3 @@ class UnsupportedOperationException : public std::exception {
         return "Unsupported operation";
     }
 };
-
-#endif //BG_EXCEPTIONS_H

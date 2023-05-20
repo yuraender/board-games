@@ -3,7 +3,10 @@ project(BoardGames)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(BoardGames src/main.cpp src/board.cpp src/eqp.cpp)
+add_executable(BoardGames src/main.cpp
+        src/board.cpp src/position.cpp
+        src/figure.cpp src/figure/chess.cpp src/figure/checkers.cpp
+        src/eqp.cpp)
 include_directories(include)
 add_subdirectory(test)
 

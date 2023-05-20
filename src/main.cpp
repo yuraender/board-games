@@ -11,7 +11,14 @@ int main() {
         Board board = Board{};
         int amount = 0;
         int iterations = 0;
-        EQP(board, 1, amount, iterations);
+        EQP(board, 1,
+            [](Board& b, int a) {
+                std::cout << "Combination #" << a << '\n';
+                std::cout << b;
+                std::cout << "\n\n";
+            },
+            amount, iterations
+        );
         std::cout << "Iterations: " << iterations << '\n';
         std::cout << "Time: "
                   << duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - time
